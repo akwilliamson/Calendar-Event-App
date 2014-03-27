@@ -13,7 +13,7 @@ def main_menu
     puts "*******************************"
     puts "Welcome to the calendar!"
     puts "Press 'c' to create a new event"
-    puts "Press 'v' to view all events"
+    puts "Press 'v' to view all events chronologically"
     puts "Press 'd' to delete an event"
     puts "Press 'e' to edit an event"
     puts "Press 'x' to exit the calendar"
@@ -25,8 +25,10 @@ def main_menu
     when 'v'
       view_events
     when 'd'
+      system "clear"
       delete_event
     when 'e'
+      system "clear"
       edit_event
     when 'x'
       puts "Goodbye"
@@ -64,7 +66,15 @@ end
 
 def view_events
   system "clear"
-  Event.all.each_with_index do |event, index|
+  future_events = []
+  Event.all.order(:start).each do |event|
+    if event.start > Time.now
+      future_events << event
+    end
+  end
+  puts "Your future events:"
+  puts "*******************"
+  future_events.each_with_index do |event, index|
     puts "\n#{index+1}) **#{event.description.capitalize}**"
     puts "At #{event.location}"
     if event.start.strftime("%m/%d/%Y") == event.end.strftime("%m/%d/%Y")
@@ -77,8 +87,16 @@ def view_events
 end
 
 def delete_event
-  view_events
-  puts "Choose by number which event would you like to delete or press 'm' to return to the main menu."
+  Event.all.each_with_index do |event, index|
+    puts "\n#{index+1}) **#{event.description.capitalize}**"
+    puts "At #{event.location}"
+    if event.start.strftime("%m/%d/%Y") == event.end.strftime("%m/%d/%Y")
+      puts "On #{event.start.strftime("%m/%d/%Y")} #{event.start.strftime(" from %I:%M%p")} #{event.end.strftime(" until %I:%M%p")}"
+    else
+      puts "On #{event.start.strftime("%m/%d/%Y")} #{event.start.strftime(" from %I:%M%p")} #{event.end.strftime(" until %I:%M%p")} ending #{event.end.strftime("%m/%d/%Y")}"
+    end
+  end
+  puts "\nChoose by number which event would you like to delete or press 'm' to return to the main menu."
   input = gets.chomp
   if input == 'M' || input ==  'm'
     system "clear"
@@ -86,14 +104,31 @@ def delete_event
   else
     system "clear"
     event_to_destroy = Event.all[input.to_i-1].description
+    puts "Are you sure you want to delete #{event_to_destroy}? 'y' or 'n'"
+    yesno = gets.chomp.downcase
+    if yesno == 'y'
     Event.all[input.to_i-1].destroy
     puts "#{event_to_destroy} has been destroyed!\n"
+    elsif yesno == 'n'
+      delete_event
+    else
+      puts "Invalid"
+      main_menu
+    end
   end
 end
 
 
 def edit_event
-  view_events
+  Event.all.each_with_index do |event, index|
+    puts "\n#{index+1}) **#{event.description.capitalize}**"
+    puts "At #{event.location}"
+    if event.start.strftime("%m/%d/%Y") == event.end.strftime("%m/%d/%Y")
+      puts "On #{event.start.strftime("%m/%d/%Y")} #{event.start.strftime(" from %I:%M%p")} #{event.end.strftime(" until %I:%M%p")}"
+    else
+      puts "On #{event.start.strftime("%m/%d/%Y")} #{event.start.strftime(" from %I:%M%p")} #{event.end.strftime(" until %I:%M%p")} ending #{event.end.strftime("%m/%d/%Y")}"
+    end
+  end
   puts "Choose by number which event would you like to edit."
   input = gets.chomp.to_i
   event_to_edit = Event.all[input-1]
@@ -104,6 +139,7 @@ def edit_event
   puts "Press 'e' for ending date & time"
   puts "Press 'm' to return to the main menu"
   choice = gets.chomp.downcase
+  system "clear"
   case choice
   when 'd'
     puts "Enter the new description."
