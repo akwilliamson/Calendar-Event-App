@@ -11,19 +11,22 @@ def main_menu
   choice = nil
   until choice == 'x'
     puts "*******************************"
-    puts "Welcome to the calendar!"
-    puts "Press 'c' to create a new event"
-    puts "Press 'v' to view all events chronologically"
-    puts "Press 'd' to delete an event"
-    puts "Press 'e' to edit an event"
-    puts "Press 'x' to exit the calendar"
+    puts "WELCOME TO THE CALENDAR!"
+    puts "Press 'c' to create a new event in your calendar"
+    puts "Press 'vf' to view all future events chronologically"
+    puts "Press 'vc' to view events for a chosen time period"
+    puts "Press 'd' to delete an event from the calendar"
+    puts "Press 'e' to edit an existing event in the calendar"
+    puts "Press 'x' to exit the calendar app"
     puts "*******************************"
     choice = gets.chomp.downcase
     case choice
     when 'c'
       create_event
-    when 'v'
-      view_events
+    when 'vf'
+      view_future_events
+    when 'vc'
+      view_chosen_events
     when 'd'
       system "clear"
       delete_event
@@ -64,7 +67,7 @@ def create_event
   puts "#{event.description} has been created!"
 end
 
-def view_events
+def view_future_events
   system "clear"
   future_events = []
   Event.all.order(:start).each do |event|
@@ -84,6 +87,92 @@ def view_events
     end
   end
   puts "\n"
+end
+
+def view_chosen_events
+  puts "Press 'm' to view all of this month's events"
+  puts "Press 'w' to view all of this week's events"
+  puts "Press 'd' to view all of today's events"
+  puts "Press 'x' to return to the main menu"
+  input = gets.chomp.downcase
+  case input
+  when 'm'
+    system "clear"
+    view_month_events
+  when 'w'
+    system "clear"
+    view_week_events
+  when 'd'
+    system "clear"
+    view_day_events
+  when 'x'
+    main_menu
+  end
+end
+
+def view_month_events
+  now = Time.now
+  month_events = []
+  Event.all.order(:start).each do |event|
+    if event.start.month == now.month && event.start.year == now.year
+      month_events << event
+    end
+  end
+  puts "This months events:"
+  puts "*******************"
+  month_events.each_with_index do |event, index|
+    puts "\n#{index+1}) **#{event.description.capitalize}**"
+    puts "At #{event.location}"
+    if event.start.strftime("%m/%d/%Y") == event.end.strftime("%m/%d/%Y")
+      puts "On #{event.start.strftime("%m/%d/%Y")} #{event.start.strftime(" from %I:%M%p")} #{event.end.strftime(" until %I:%M%p")}"
+    else
+      puts "On #{event.start.strftime("%m/%d/%Y")} #{event.start.strftime(" from %I:%M%p")} #{event.end.strftime(" until %I:%M%p")} ending #{event.end.strftime("%m/%d/%Y")}"
+    end
+  end
+end
+
+def view_week_events
+  now = Time.now
+  weeks_events = []
+  Event.all.order(:start).each do |event|
+    day = event.start.yday+2
+    if day/7 == now.yday/7 && event.start.year == now.year
+      weeks_events << event
+    end
+  end
+  binding.pry
+  puts "This weeks events:"
+  puts "*******************"
+  weeks_events.each_with_index do |event, index|
+    puts "\n#{index+1}) **#{event.description.capitalize}**"
+    puts "At #{event.location}"
+    if event.start.strftime("%m/%d/%Y") == event.end.strftime("%m/%d/%Y")
+      puts "On #{event.start.strftime("%m/%d/%Y")} #{event.start.strftime(" from %I:%M%p")} #{event.end.strftime(" until %I:%M%p")}"
+    else
+      puts "On #{event.start.strftime("%m/%d/%Y")} #{event.start.strftime(" from %I:%M%p")} #{event.end.strftime(" until %I:%M%p")} ending #{event.end.strftime("%m/%d/%Y")}"
+    end
+  end
+end
+
+def view_day_events
+  now = Time.now
+  today_events = []
+  Event.all.order(:start).each do |event|
+    if event.start.yday == now.yday && event.start.year == now.year
+      today_events << event
+    end
+  end
+  puts "Today's events:"
+  puts "*******************"
+  today_events.each_with_index do |event, index|
+    puts "\n#{index+1}) **#{event.description.capitalize}**"
+    puts "At #{event.location}"
+    if event.start.strftime("%m/%d/%Y") == event.end.strftime("%m/%d/%Y")
+      puts "On #{event.start.strftime("%m/%d/%Y")} #{event.start.strftime(" from %I:%M%p")} #{event.end.strftime(" until %I:%M%p")}"
+    else
+      puts "On #{event.start.strftime("%m/%d/%Y")} #{event.start.strftime(" from %I:%M%p")} #{event.end.strftime(" until %I:%M%p")} ending #{event.end.strftime("%m/%d/%Y")}"
+    end
+  end
 end
 
 def delete_event
@@ -171,15 +260,6 @@ def edit_event
     puts "Invalid input"
     edit_event
   end
-
 end
 
 main_menu
-
-
-
-
-
-
-
-
